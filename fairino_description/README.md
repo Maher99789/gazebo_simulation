@@ -1,30 +1,30 @@
 ```mermaid
-    subgraph Gazebo
-      World[Empty World]
-      Robot[dual_arms URDF + gz_ros2_control plugin]
-      JointStatePublisher[Joint State Publisher]
-    end
+subgraph Gazebo
+  World[Empty World]
+  Robot[dual_arms URDF + gz_ros2_control plugin]
+  JointStatePublisher[Joint State Publisher]
+end
 
-    subgraph ROS2
-      ControllerManager[Controller Manager]
-      Controllers[Trajectory / DiffDrive Controllers]
-      Topics[/cmd_vel, /joint_states]
-    end
+subgraph ROS2
+  ControllerManager[Controller Manager]
+  Controllers[Trajectory / DiffDrive Controllers]
+  Topics[/cmd_vel, /joint_states]
+end
 
-    World --> Robot
-    Robot --> JointStatePublisher
-    Robot --> ControllerManager
-    ControllerManager --> Controllers
-    Controllers --> Topics
-    JointStatePublisher --> Topics
+World --> Robot
+Robot --> JointStatePublisher
+Robot --> ControllerManager
+ControllerManager --> Controllers
+Controllers --> Topics
+JointStatePublisher --> Topics
 
-    subgraph Bridge
-      IgnitionTopics[ignition.msgs.*]
-      Ros2Topics[geometry_msgs / sensor_msgs]
-    end
+subgraph Bridge
+  IgnitionTopics[ignition.msgs.*]
+  Ros2Topics[geometry_msgs / sensor_msgs]
+end
 
-    Topics <--> Bridge
-    IgnitionTopics <--> Bridge
+Topics <--> Bridge
+IgnitionTopics <--> Bridge
 ```
 🔎 Bridge Testing
 

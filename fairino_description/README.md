@@ -1,30 +1,51 @@
 ```mermaid
-subgraph Gazebo
-  World[Empty World]
-  Robot[dual_arms URDF + gz_ros2_control plugin]
-  JointStatePublisher[Joint State Publisher]
-end
+classDiagram
+    class Gazebo {
+        +load_world()
+        +spawn_robot(URDF)
+        +physics_engine()
+    }
 
-subgraph ROS2
-  ControllerManager[Controller Manager]
-  Controllers[Trajectory / DiffDrive Controllers]
-  Topics[/cmd_vel, /joint_states]
-end
+    class URDF {
+        +robot_description
+        +plugins[gz_ros2_control]
+        +joints_and_links
+    }
 
-World --> Robot
-Robot --> JointStatePublisher
-Robot --> ControllerManager
-ControllerManager --> Controllers
-Controllers --> Topics
-JointStatePublisher --> Topics
+    class gz_ros2_control {
+        +start_controller_manager()
+        +expose_joint_interfaces()
+        +read_YAML_config()
+    }
 
-subgraph Bridge
-  IgnitionTopics[ignition.msgs.*]
-  Ros2Topics[geometry_msgs / sensor_msgs]
-end
+    class ControllerManager {
+        +load_controllers()
+        +configure_controllers()
+        +activate_controllers()
+        +publish_joint_states()
+    }
 
-Topics <--> Bridge
-IgnitionTopics <--> Bridge
+    class Controllers {
+        <<examples>>
+        JointStateBroadcaster
+        PositionController
+        TrajectoryController
+        DiffDriveController
+    }
+
+    class ROS2Topics {
+        <<topics>>
+        /cmd_vel
+        /joint_states
+        /arm_controller/commands
+    }
+
+    Gazebo --> URDF : loads
+    URDF --> gz_ros2_control : plugin
+    gz_ros2_control --> ControllerManager : starts
+    ControllerManager --> Controllers : manages
+    Controllers --> ROS2Topics : expose topics
+    ROS2Topics --> Gazebo : feedback loop
 ```
 🔎 Bridge Testing
 

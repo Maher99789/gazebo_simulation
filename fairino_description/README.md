@@ -1,4 +1,4 @@
-flowchart TD
+```mermaid
     subgraph Gazebo
       World[Empty World]
       Robot[dual_arms URDF + gz_ros2_control plugin]
@@ -25,7 +25,7 @@ flowchart TD
 
     Topics <--> Bridge
     IgnitionTopics <--> Bridge
-
+```
 🔎 Bridge Testing
 
 ign topic -e -t /chatter 

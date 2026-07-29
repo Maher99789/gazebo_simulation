@@ -127,53 +127,53 @@ sequenceDiagram
     Spawn->>CM: Load & activate arm_controller
 ```
 1️⃣ Xacro Compilation
-  Command: xacro robot.xacro > /tmp/robot.urdf
+Command: xacro robot.xacro > /tmp/robot.urdf
 
-  What happens: Gazebo cannot parse Xacro macros, variables, or conditional tags directly. This step flattens the .xacro file tree into a plain XML URDF file (/tmp/robot.urdf).
+What happens: Gazebo cannot parse Xacro macros, variables, or conditional tags directly. This step flattens the .xacro file tree into a plain XML URDF file (/tmp/robot.urdf).
 
 2️⃣ Publishing Robot Description (robot_state_publisher)
 
-    Command: ros2 run robot_state_publisher robot_state_publisher /tmp/robot.urdf
+Command: ros2 run robot_state_publisher robot_state_publisher /tmp/robot.urdf
 
-    What happens:
+What happens:
 
-        Reads /tmp/robot.urdf and broadcasts it over the ROS 2 network on the /robot_description topic and parameter server.
+Reads /tmp/robot.urdf and broadcasts it over the ROS 2 network on the /robot_description topic and parameter server.
 
-        Why it is required: The Gazebo control plugin needs to query this node to parse joint limits, kinematics, and hardware interfaces. Without it, the plugin hangs waiting for /robot_description.
+Why it is required: The Gazebo control plugin needs to query this node to parse joint limits, kinematics, and hardware interfaces. Without it, the plugin hangs waiting for /robot_description.
 
 3️⃣ Spawning Entity in Gazebo (ros_gz_sim create)
 
-    Command: ros2 run ros_gz_sim create -file /tmp/robot.urdf -name robot_name
+Command: ros2 run ros_gz_sim create -file /tmp/robot.urdf -name robot_name
 
-    What happens:
+What happens:
 
-      Acts as a bridge client calling Gazebo's entity creation service.
+Acts as a bridge client calling Gazebo's entity creation service.
 
-      Tells Gazebo to instantiate the visual and collision geometry inside the running 3D world (empty.sdf).
+Tells Gazebo to instantiate the visual and collision geometry inside the running 3D world (empty.sdf).
 
 4️⃣ Loading ign_ros2_control Plugin
 
-    What happens:
+What happens:
 
-      Once the entity is spawned, Gazebo parses the <gazebo> tag inside the URDF and dynamically loads libign_ros2_control-system.so.
+Once the entity is spawned, Gazebo parses the <gazebo> tag inside the URDF and dynamically loads libign_ros2_control-system.so.
 
-      The plugin connects to robot_state_publisher, maps the URDF joint names to Gazebo simulated actuators, and initializes the ROS 2 Controller Manager (/controller_manager).
+The plugin connects to robot_state_publisher, maps the URDF joint names to Gazebo simulated actuators, and initializes the ROS 2 Controller Manager (/controller_manager).
 
 5️⃣ Spawning & Activating Controllers
 
-    Commands:
+Commands:
 
-      ros2 run controller_manager spawner joint_state_broadcaster
+ros2 run controller_manager spawner joint_state_broadcaster
 
-      ros2 run controller_manager spawner left_arm_controller
+ros2 run controller_manager spawner left_arm_controller
 
-    What happens:
+What happens:
 
-      Calls the /controller_manager/load_controller and switch_controller services.
+Calls the /controller_manager/load_controller and switch_controller services.
 
-      joint_state_broadcaster: Reads joint angles from Gazebo physics and publishes them to ROS 2 (/joint_states).
+joint_state_broadcaster: Reads joint angles from Gazebo physics and publishes them to ROS 2 (/joint_states).
 
-      arm_controller: Accepts joint trajectories (e.g., from MoveIt) and writes joint commands directly to the simulated motors in Gazebo.
+arm_controller: Accepts joint trajectories (e.g., from MoveIt) and writes joint commands directly to the simulated motors in Gazebo.
 Terminal1:
 ```bash
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH

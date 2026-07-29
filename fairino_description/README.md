@@ -1,3 +1,31 @@
+# Installation
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y build - essential cmake git wget curl gnupg lsb - release
+sudo apt install -y gazebo
+sudo apt install -y \
+  ros - humble - ros - gz \
+  ros - humble - ros - gz - sim \
+  ros - humble - ros - gz - bridge \
+  ros - humble - ros - gz - image \
+  ros - humble - ros - gz - interfaces \
+  ros - humble - gz - ros2 - control
+```
+
+# Check Gazebo Version
+
+```bash
+ign gazebo -- version
+```
+This prints the installed Fortress version.
+
+# Test Gazebo GUI
+
+```bash
+ign gazebo -r -v 4 sensors . sdf
+```
+# Gazebo Simulation Workflow
 ```mermaid
 classDiagram
     class Gazebo {
@@ -47,6 +75,21 @@ classDiagram
     Controllers --> ROS2Topics : expose topics
     ROS2Topics --> Gazebo : feedback loop
 ```
+
+Gazebo loads the world and spawns the robot from its URDF.
+
+The URDF includes the gz_ros2_control plugin, which connects Gazebo’s physics engine to ROS 2.
+
+The gz_ros2_control plugin starts the controller manager and exposes joint interfaces.
+
+The Controller Manager reads the YAML config, loads, configures, and activates controllers.
+
+Controllers (e.g. JointStateBroadcaster, PositionController, TrajectoryController) expose ROS 2 topics.
+
+ROS 2 Topics (/cmd_vel, /joint_states, /arm_controller/commands) allow you to send commands and receive feedback.
+
+The loop closes as Gazebo applies commands and publishes joint states back.
+
 🔎 Bridge Testing
 
 ign topic -e -t /chatter 
@@ -72,57 +115,55 @@ Useful for discovering what ROS 2 nodes are publishing/subscribing.
 
 ⚙️ Controller Integration
 
-    The gz_ros2_control plugin is added to the URDF.
+The gz_ros2_control plugin is added to the URDF.
 
-    It loads a YAML configuration file (rrbot_controllers.yaml) that defines:
+It loads a YAML configuration file (rrbot_controllers.yaml) that defines:
 
-        joint_state_broadcaster (publishes joint states).
+joint_state_broadcaster (publishes joint states).
 
-        rrbot_controller (controls joints defined in URDF).
+_arm_controller (controls joints defined in URDF).
 
-    When Gazebo spawns the robot, the plugin starts a controller manager.
+When Gazebo spawns the robot, the plugin starts a controller manager.
 
-    The controller manager reads joints from the URDF and exposes them as ROS 2 interfaces.
+The controller manager reads joints from the URDF and exposes them as ROS 2 interfaces.
 
 🚀 Launch File Workflow
 
 A launch file is used to run multiple nodes at once:
 
-    Gazebo simulation (spawns RRBot).
+Gazebo simulation (spawns RRBot).
 
-    ros_gz_bridge (connects Ignition ↔ ROS 2 topics).
+ros_gz_bridge (connects Ignition ↔ ROS 2 topics).
 
-    controller_manager (loads controllers from YAML).
+controller_manager (loads controllers from YAML).
 
 This ensures the entire pipeline starts with a single command.
 
 
 ✅ State Flow Summary
 
-    Gazebo loads RRBot with the gz_ros2_control plugin.
+Gazebo loads RRBot with the gz_ros2_control plugin.
 
-    Controller Manager reads joints from URDF and YAML.
+Controller Manager reads joints from URDF and YAML.
 
-    Controllers expose ROS 2 topics (/cmd_vel, /joint_states).
+Controllers expose ROS 2 topics (/cmd_vel, /joint_states).
 
-    Bridge connects Ignition topics ↔ ROS 2 topics.
+Bridge connects Ignition topics ↔ ROS 2 topics.
 
-    Tests:
+Tests:
 
-        ign topic -e -t /chatter ↔ ros2 topic echo /chatter → confirms bridge.
-
-        ign topic -l ↔ ros2 topic list → shows available topics.
-
-        ros2 control list_controllers → shows active controllers.
-
-        ros2 topic pub /cmd_vel ... → moves the robot in Gazebo.
+ign topic -e -t /chatter ↔ ros2 topic echo /chatter → confirms bridge.
+ign topic -l ↔ ros2 topic list → shows available topics.
+ros2 control list_controllers → shows active controllers.
+ros2 topic pub /cmd_vel ... → moves the robot in Gazebo.
 
 # Bridge Verification
 
 4.1. Run the Bridge
+```bash
 ros2 run ros_gz_bridge parameter_bridge / chatter@std_msgs / msg /
 String@ignition . msgs . StringMsg
-
+```
 4.2. Publish a ROS 2 Message
 ```bash
 ros2 topic pub / chatter std_msgs / msg / String " data : ␣ ’ Hello ␣ Gazebo ␣ Ignition ’ "
@@ -176,13 +217,13 @@ this what shell log
 
 When launching with a controller‑enabled description, the log shows:
 
-    Controller manager is loaded.
+Controller manager is loaded.
 
-    Controllers (left_arm_controller, right_arm_controller, joint_state_broadcaster) are loaded, configured, and activated.
+Controllers (left_arm_controller, right_arm_controller, joint_state_broadcaster) are loaded, configured, and activated.
 
-    Warnings may appear if the desired update period is slower than Gazebo’s simulation period, but controllers still activate successfully.
+Warnings may appear if the desired update period is slower than Gazebo’s simulation period, but controllers still activate successfully.
 
-    Each spawner process reports clean completion once controllers are active.
+Each spawner process reports clean completion once controllers are active.
 
 2.joint states
 To verify that joint states are being published:

@@ -13,13 +13,28 @@ sudo apt install -y \
   ros - humble - gz - ros2 - control
 ```
 
-# Check Gazebo Version
+# Check Gazebo Version and the pkg
 
 ```bash
 ign gazebo -- version
 ```
 This prints the installed Fortress version.
+```bash
+dpkg -l | grep ros-humble-ros-gz
 
+```
+
+The shell log confirms that all required ROS 2 Gazebo integration packages (ros-humble-ros-gz, ros-humble-ros-gz-sim, ros-humble-ros-gz-bridge, ros-humble-ros-gz-image, ros-humble-ros-gz-interfaces, and ros-humble-ros-gz-sim-demos) are installed successfully.
+
+```bash
+dpkg -l | grep ros-humble-ros-gz
+ii  ros-humble-ros-gz                                  0.244.24-1jammy.20260422.111412                  amd64        Meta-package containing interfaces for using ROS 2 with Gazebo simulation.
+ii  ros-humble-ros-gz-bridge                           0.244.24-1jammy.20260422.064121                  amd64        Bridge communication between ROS and Gazebo Transport
+ii  ros-humble-ros-gz-image                            0.244.24-1jammy.20260422.073210                  amd64        Image utilities for Gazebo simulation with ROS.
+ii  ros-humble-ros-gz-interfaces                       0.244.24-1jammy.20260414.035014                  amd64        Message and service data structures for interacting with Gazebo from ROS2.
+ii  ros-humble-ros-gz-sim                              0.244.24-1jammy.20260422.085839                  amd64        Tools for using Gazebo Sim simulation with ROS.
+ii  ros-humble-ros-gz-sim-demos                        0.244.25-1jammy.20260612.213907                  amd64        Demos using Gazebo Sim simulation with ROS
+```
 # Test Gazebo GUI
 
 ```bash
@@ -166,7 +181,7 @@ String@ignition . msgs . StringMsg
 ```
 4.2. Publish a ROS 2 Message
 ```bash
-ros2 topic pub / chatter std_msgs / msg / String " data : ␣ ’ Hello ␣ Gazebo ␣ Ignition ’ "
+ros2 topic pub / chatter std_msgs / msg / String "data:’Hello Gazebo Ignition’"
 -- once
 ```
 

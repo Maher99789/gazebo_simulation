@@ -90,6 +90,116 @@ classDiagram
     Controllers --> ROS2Topics : expose topics
     ROS2Topics --> Gazebo : feedback loop
 ```
+📑 Detailed Step-by-Step Breakdown
+
+The diagram below illustrates how a URDF robot model is compiled, spawned, and hooked up to `ros2_control` inside Gazebo.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Shell as Terminal / Shell
+    participant RSP as robot_state_publisher Node
+    participant GZ as Gazebo Simulation
+    participant Plug as ign_ros2_control Plugin
+    participant CM as controller_manager
+    participant Spawn as Controller Spawners
+
+    Note over Shell: 1. Compile Xacro to pure URDF
+    Shell->>Shell: xacro model.xacro > /tmp/robot.urdf
+
+    Note over Shell, RSP: 2. Publish Robot Description
+    Shell->>RSP: ros2 run robot_state_publisher /tmp/robot.urdf
+    RSP-->>RSP: Publish /robot_description topic
+
+    Note over Shell, GZ: 3. Spawn Robot Entity
+    Shell->>GZ: ros2 run ros_gz_sim create -file /tmp/robot.urdf
+    GZ-->>GZ: Render 3D model in physics world
+
+    Note over GZ, Plug: 4. Load Hardware Plugin
+    GZ->>Plug: Read <plugin> tag & load libign_ros2_control-system.so
+    Plug->>RSP: Fetch kinematics from /robot_description
+    Plug->>CM: Spin up Controller Manager node
+
+    Note over Shell, Spawn: 5. Activate Controllers
+    Shell->>Spawn: ros2 run controller_manager spawner joint_state_broadcaster
+    Spawn->>CM: Load & activate joint_state_broadcaster
+    Shell->>Spawn: ros2 run controller_manager spawner arm_controller
+    Spawn->>CM: Load & activate arm_controller
+```
+  1️⃣ Xacro Compilation
+  Command: xacro robot.xacro > /tmp/robot.urdf
+
+  What happens: Gazebo cannot parse Xacro macros, variables, or conditional tags directly. This step flattens the .xacro file tree into a plain XML URDF file (/tmp/robot.urdf).
+  2️⃣ Publishing Robot Description (robot_state_publisher)
+
+    Command: ros2 run robot_state_publisher robot_state_publisher /tmp/robot.urdf
+
+    What happens:
+
+        Reads /tmp/robot.urdf and broadcasts it over the ROS 2 network on the /robot_description topic and parameter server.
+
+        Why it is required: The Gazebo control plugin needs to query this node to parse joint limits, kinematics, and hardware interfaces. Without it, the plugin hangs waiting for /robot_description.
+
+3️⃣ Spawning Entity in Gazebo (ros_gz_sim create)
+
+    Command: ros2 run ros_gz_sim create -file /tmp/robot.urdf -name robot_name
+
+    What happens:
+
+        Acts as a bridge client calling Gazebo's entity creation service.
+
+        Tells Gazebo to instantiate the visual and collision geometry inside the running 3D world (empty.sdf).
+
+4️⃣ Loading ign_ros2_control Plugin
+
+    What happens:
+
+        Once the entity is spawned, Gazebo parses the <gazebo> tag inside the URDF and dynamically loads libign_ros2_control-system.so.
+
+        The plugin connects to robot_state_publisher, maps the URDF joint names to Gazebo simulated actuators, and initializes the ROS 2 Controller Manager (/controller_manager).
+
+5️⃣ Spawning & Activating Controllers
+
+    Commands:
+
+        ros2 run controller_manager spawner joint_state_broadcaster
+
+        ros2 run controller_manager spawner left_arm_controller
+
+    What happens:
+
+        Calls the /controller_manager/load_controller and switch_controller services.
+
+        joint_state_broadcaster: Reads joint angles from Gazebo physics and publishes them to ROS 2 (/joint_states).
+
+        arm_controller: Accepts joint trajectories (e.g., from MoveIt) and writes joint commands directly to the simulated motors in Gazebo.
+Terminal1:
+```bash
+export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+ign gazebo -r empty.sdf
+```
+
+Terminal2:
+```bash
+source ~/sim_ws/install/setup.bash
+xacro ~/sim_ws/src/fairino_description/urdf_dual_arms/fairino3_dual_arms.urdf.xacro > /tmp/fairino.urdf
+ros2 run robot_state_publisher robot_state_publisher /tmp/fairino.urdf
+```
+
+Terminal3:
+```bash
+source ~/sim_ws/install/setup.bash
+
+ros2 run ros_gz_sim create -file /tmp/fairino.urdf -name fairino_dual_arms -x 0.0 -y 0.0 -z 0.0
+ros2 run controller_manager spawner joint_state_broadcaster
+ros2 run controller_manager spawner left_arm_controller
+ros2 run controller_manager spawner right_arm_controller
+```
+
+Terminal4:
+```bash
+ros2 control list_controllers
+```
 
 Gazebo loads the world and spawns the robot from its URDF.
 

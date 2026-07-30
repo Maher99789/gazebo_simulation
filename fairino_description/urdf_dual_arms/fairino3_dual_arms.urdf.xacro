@@ -65,16 +65,16 @@
     </visual>
     <!-- Add minimal inertial to prevent disconnected graph errors -->
     <inertial>
-      <mass value="0.1"/>
-      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+      <mass value="0.1" />
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
     </inertial>
   </link>
 
   <!-- 2. Optical Frame -->
   <link name="camera_optical_frame">
     <inertial>
-      <mass value="0.01"/>
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+      <mass value="0.01" />
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
     </inertial>
   </link>
 
@@ -89,7 +89,7 @@
   <joint name="camera_to_optical" type="fixed">
     <parent link="camera_link" />
     <child link="camera_optical_frame" />
-    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966"/>
+    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
   </joint>
   <!-- 5. Gazebo settings to make it "ghost-like" (stable) -->
   <!-- <gazebo reference="camera_link">
@@ -98,7 +98,7 @@
   </gazebo> -->
 
   <!-- Left + Right arms -->
-    <xacro:fairino3_v6_robot_prefixed prefix="${left_prefix}"
+  <xacro:fairino3_v6_robot_prefixed prefix="${left_prefix}"
     joint1_angle="-1.5708"
     joint2_angle="1.5708"
     joint3_angle="-1.5708"
@@ -201,8 +201,8 @@
   </ros2_control>
 
   <gazebo>
-      <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-        <parameters>$(find fairino_description)/config/ros2_controllers.yaml</parameters>
-      </plugin>
+    <plugin filename="/opt/ros/humble/lib/libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <parameters>$(find fairino_description)/config/ros2_controllers.yaml</parameters>
+    </plugin>
   </gazebo>
 </robot>

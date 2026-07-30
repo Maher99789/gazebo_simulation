@@ -126,6 +126,25 @@ sequenceDiagram
     Shell->>Spawn: ros2 run controller_manager spawner arm_controller
     Spawn->>CM: Load & activate arm_controller
 ```
+Adding these export commands to my ~/.bashrc file, I permanently set environment variables that tell the shell where to find ROS 2 libraries, Gazebo plugins, and my robot’s meshes, so every new terminal session automatically has the correct paths configured.
+
+```bash
+gedit ~/.bashrc
+```
+I add these commands to my ~/.bashrc file
+```bash
+source /opt/ros/humble/setup.bash
+export IGN_GAZEBO_RESOURCE_PATH=~/sim_ws/install/fairino_description/share:$IGN_GAZEBO_RESOURCE_PATH
+export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:/opt/ros/humble/lib
+export PATH=$PATH:$HOME/.local/bin
+export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+export GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$GZ_SIM_SYSTEM_PLUGIN_PATH
+```
+so that the environment variables are set automatically, and each time I open a new terminal I run 
+```bash 
+source ~/.bashrc 
+```
+to apply them.
 1️⃣ Xacro Compilation
 Command: xacro robot.xacro > /tmp/robot.urdf
 
@@ -176,7 +195,7 @@ joint_state_broadcaster: Reads joint angles from Gazebo physics and publishes th
 arm_controller: Accepts joint trajectories (e.g., from MoveIt) and writes joint commands directly to the simulated motors in Gazebo.
 Terminal1:
 ```bash
-export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
+source ~/.bashrc
 ign gazebo -r empty.sdf
 ```
 

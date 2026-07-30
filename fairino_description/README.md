@@ -145,6 +145,7 @@ so that the environment variables are set automatically, and each time I open a 
 source ~/.bashrc 
 ```
 to apply them.
+
 1️⃣ Xacro Compilation
 Command: xacro robot.xacro > /tmp/robot.urdf
 

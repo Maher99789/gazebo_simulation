@@ -139,6 +139,7 @@ export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:/opt/ros/humble/lib
 export PATH=$PATH:$HOME/.local/bin
 export IGN_GAZEBO_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$IGN_GAZEBO_SYSTEM_PLUGIN_PATH
 export GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/humble/lib:$GZ_SIM_SYSTEM_PLUGIN_PATH
+export IGN_GAZEBO_RESOURCE_PATH=$HOME/sim_ws/install/fairino_description/share/fairino_description/config:$IGN_GAZEBO_RESOURCE_PATH
 ```
 so that the environment variables are set automatically, and each time I open a new terminal I run 
 ```bash 
@@ -216,7 +217,14 @@ ros2 run controller_manager spawner joint_state_broadcaster
 ros2 run controller_manager spawner left_arm_controller
 ros2 run controller_manager spawner right_arm_controller
 ```
+Note: Use this command to directly launch a complete SDF World in Ignition/Gazebo Sim.(Unlike model spawning, this opens the full simulation environment directly from the SDF world file.)
+Parameters:
+-r: Starts the simulation immediately (Run mode, auto-play without pressing Play button)
+// $HOME/...   : Absolute path to your custom world.sdf file
 
+```bash
+ros2 run ros_gz_sim create -file /path/to/your_model.sdf -name my_model -x 0.0 -y 0.0 -z 0.0
+```
 Terminal4:
 ```bash
 ros2 control list_controllers

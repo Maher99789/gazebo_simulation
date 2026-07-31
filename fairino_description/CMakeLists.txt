@@ -15,7 +15,7 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY urdf_dual_arms launch rviz urdf config meshes
+install(DIRECTORY urdf_dual_arms launch params rviz config meshes
   DESTINATION share/${PROJECT_NAME}
 )
 

@@ -3,205 +3,260 @@
   <xacro:arg name="left_prefix" default="left_" />
   <xacro:arg name="right_prefix" default="right_" />
   <xacro:arg name="arm_spacing" default="0.75" />
-  <!-- <xacro:arg name="initial_positions_file"
-           default="$(find fairino_description)/config/initial_positions.yaml"/>
-  <xacro:arg name="ros2_controllers_file"
-           default="$(find fairino_description)/config/ros2_controllers.yaml"/> -->
-
-  <xacro:arg name="floor_size_x" default="4.0" />
-  <xacro:arg name="floor_size_y" default="4.0" />
-  <xacro:arg name="floor_thickness" default="0.1" />
-
+  <xacro:arg name="left_robot_ip" default="192.168.58.2" />
+  <xacro:arg name="right_robot_ip" default="192.168.58.3" />
+  <xacro:arg name="platform_length" default="0.90" />
+  <xacro:arg name="platform_width" default="0.58" />
+  <xacro:arg name="platform_height" default="0.05" />
+  <xacro:arg name="platform_bottom_z" default="0.61" />
+  <xacro:arg name="camera_world_x" default="0.45" />
+  <xacro:arg name="camera_world_y" default="0.59" />
+  <xacro:arg name="camera_world_z" default="0.61" />
+  <xacro:arg name="floor_length" default="1.8" />
+  <xacro:arg name="floor_width" default="1.16" />
+  <xacro:arg name="floor_height" default="0.05" />
   <xacro:include
     filename="$(find fairino_description)/urdf_dual_arms/fairino3_v6_robot.prefixed.urdf.xacro" />
-
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro" />
   <xacro:property name="left_prefix" value="$(arg left_prefix)" />
   <xacro:property name="right_prefix" value="$(arg right_prefix)" />
   <xacro:property name="arm_spacing" value="$(arg arm_spacing)" />
-  <!-- <xacro:property name="initial_positions_file" value="$(arg initial_positions_file)"/>
-  <xacro:property name="ros2_controllers_file" value="$(arg ros2_controllers_file)"/> -->
-  <xacro:property name="floor_size_x" value="$(arg floor_size_x)" />
-  <xacro:property name="floor_size_y" value="$(arg floor_size_y)" />
-  <xacro:property name="floor_thickness" value="$(arg floor_thickness)" />
-
+  <xacro:property name="left_robot_ip" value="$(arg left_robot_ip)" />
+  <xacro:property name="right_robot_ip" value="$(arg right_robot_ip)" />
+  <xacro:property name="platform_length" value="$(arg platform_length)" />
+  <xacro:property name="platform_width" value="$(arg platform_width)" />
+  <xacro:property name="platform_height" value="$(arg platform_height)" />
+  <xacro:property name="platform_bottom_z" value="$(arg platform_bottom_z)" />
+  <xacro:property name="camera_world_x" value="$(arg camera_world_x)" />
+  <xacro:property name="camera_world_y" value="$(arg camera_world_y)" />
+  <xacro:property name="camera_world_z" value="$(arg camera_world_z)" />
+  <xacro:property name="floor_length" value="$(arg floor_length)" />
+  <xacro:property name="floor_width" value="$(arg floor_width)" />
+  <xacro:property name="floor_height" value="$(arg floor_height)" />
+  <xacro:arg name="initial_positions_file"
+    default="$(find fairino_description)/config/initial_positions.yaml" />
+  <xacro:property name="initial_positions_file" value="$(arg initial_positions_file)" />
+  <xacro:property name="initial_positions"
+    value="${xacro.load_yaml(initial_positions_file)['initial_positions']}" />
 
   <link name="world" />
 
+  <link name="dual_arm_center" />
+
+  <joint name="world_to_center" type="fixed">
+    <parent link="world" />
+    <child link="dual_arm_center" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
   <link name="floor_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="${floor_length} ${floor_width} ${floor_height}" />
+      </geometry>
+      <material name="floor_grey">
+        <color rgba="0.35 0.35 0.35 1.0" />
+      </material>
+    </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <box size="${floor_size_x} ${floor_size_y} ${floor_thickness}" />
+        <box size="${floor_length} ${floor_width} ${floor_height}" />
       </geometry>
     </collision>
+
+    <!-- Keep the fixed floor link and its collision during URDF-to-SDF conversion. -->
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1.0" />
+      <inertia
+        ixx="${(float(floor_width) * float(floor_width) + float(floor_height) * float(floor_height)) / 12.0}"
+        ixy="0" ixz="0"
+        iyy="${(float(floor_length) * float(floor_length) + float(floor_height) * float(floor_height)) / 12.0}"
+        iyz="0"
+        izz="${(float(floor_length) * float(floor_length) + float(floor_width) * float(floor_width)) / 12.0}" />
+    </inertial>
   </link>
+
   <joint name="world_to_floor" type="fixed">
     <parent link="world" />
     <child link="floor_link" />
-    <origin xyz="0 0 ${-float(floor_thickness)/2.0 - 0.001}" rpy="0 0 0" />
+    <origin xyz="0.45 0.58 ${-float(floor_height)/2.0}" rpy="0 0 0" />
   </joint>
+
+  <link name="platform_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="${platform_length} ${platform_width} ${platform_height}" />
+      </geometry>
+      <material name="platform_grey">
+        <color rgba="0.45 0.45 0.45 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="${platform_length} ${platform_width} ${platform_height}" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="world_to_platform" type="fixed">
+    <parent link="world" />
+    <child link="platform_link" />
+    <origin
+      xyz="${float(platform_length)/2.0} ${float(platform_width)/2.0} ${float(platform_bottom_z) + float(platform_height)/2.0}"
+      rpy="0 0 0" />
+  </joint>
+
+  <!-- RealSense body frame: +X forward/view direction, +Y left, +Z up. -->
+  <xacro:sensor_d435i parent="world" name="d435i">
+    <origin xyz="${camera_world_x} ${camera_world_y} ${camera_world_z}"
+      rpy="0 1.16937 1.57079632679" />
+  </xacro:sensor_d435i>
+
   <joint name="world_to_left_base" type="fixed">
     <parent link="world" />
     <child link="${left_prefix}base_link" />
-    <origin xyz="0 0 0" rpy="0 0 -1.5708" />
+    <origin xyz="0.075 0.48 ${platform_bottom_z}" rpy="3.14159 0 0" />
   </joint>
   <joint name="world_to_right_base" type="fixed">
     <parent link="world" />
     <child link="${right_prefix}base_link" />
-    <origin xyz="0 ${-float(arm_spacing)} 0" rpy="0 0 -1.5708" />
+    <origin xyz="0.825 0.48 ${platform_bottom_z}" rpy="3.14159 0 0" />
   </joint>
-
-
-  <!-- 1. The Camera Visual Box -->
-  <link name="camera_link">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <box size="0.05 0.05 0.03" />
-      </geometry>
-      <material name="camera_grey">
-        <color rgba="0.5 0.5 0.5 1.0" />
-      </material>
-    </visual>
-    <!-- Add minimal inertial to prevent disconnected graph errors -->
-    <inertial>
-      <mass value="0.1" />
-      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
-    </inertial>
-  </link>
-
-  <!-- 2. Optical Frame -->
-  <link name="camera_optical_frame">
-    <inertial>
-      <mass value="0.01" />
-      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001" />
-    </inertial>
-  </link>
-
-  <!-- 3. Joint to connect camera_link to the world -->
-  <joint name="world_to_camera" type="fixed">
-    <parent link="world" />
-    <child link="camera_link" />
-    <origin xyz="0 -0.375 0.6" rpy="0 0 0" />
-  </joint>
-
-  <!-- 4. Joint to orient the optical frame relative to the camera box -->
-  <joint name="camera_to_optical" type="fixed">
-    <parent link="camera_link" />
-    <child link="camera_optical_frame" />
-    <origin xyz="0 0 0" rpy="-1.5707963267948966 0 -1.5707963267948966" />
-  </joint>
-  <!-- 5. Gazebo settings to make it "ghost-like" (stable) -->
-  <!-- <gazebo reference="camera_link">
-    <static>true</static>
-    <turnGravityOff>true</turnGravityOff>
-  </gazebo> -->
 
   <!-- Left + Right arms -->
   <xacro:fairino3_v6_robot_prefixed prefix="${left_prefix}"
-    joint1_angle="-1.5708"
-    joint2_angle="1.5708"
-    joint3_angle="-1.5708"
-    joint4_angle="3.14159"
-    joint5_angle="3.14159"
-    joint6_angle="0.0" />
-
+    grasp_roll="0.0"
+    grasp_pitch="-1.57079632679"
+    grasp_yaw="1.57079632679" />
   <xacro:fairino3_v6_robot_prefixed prefix="${right_prefix}"
-    joint1_angle="1.5708"
-    joint2_angle="1.5708"
-    joint3_angle="1.5708"
-    joint4_angle="0.0"
-    joint5_angle="-3.14159"
-    joint6_angle="0.0" />
+    grasp_roll="0.0"
+    grasp_pitch="-1.57079632679"
+    grasp_yaw="1.57079632679" />
 
-
-  <!-- ros2_control (single system with 12 joints) -->
+  <!-- ros2_control (single system with 12 joints for Gazebo Simulation) -->
 
   <ros2_control name="dual_arms_system" type="system">
     <hardware>
-      <plugin>ign_ros2_control/IgnitionSystem</plugin>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>
 
-    <!-- Left arm joints -->
+    <!-- LEFT ARM JOINTS -->
     <joint name="${left_prefix}joint1">
       <command_interface name="position" />
-      <state_interface name="position" />
-      <state_interface name="velocity" />
-      <state_interface name="effort" />
-    </joint>
-    <joint name="${left_prefix}joint2">
-      <command_interface name="position" />
-      <state_interface name="position" />
-      <state_interface name="velocity" />
-      <state_interface name="effort" />
-    </joint>
-    <joint name="${left_prefix}joint3">
-      <!-- <command_interfaces><position/></command_interfaces> -->
-      <command_interface name="position" />
-      <state_interface name="position" />
-      <state_interface name="velocity" />
-      <state_interface name="effort" />
-    </joint>
-    <joint name="${left_prefix}joint4">
-      <command_interface name="position" />
-      <state_interface name="position" />
-      <state_interface name="velocity" />
-      <state_interface name="effort" />
-    </joint>
-    <joint name="${left_prefix}joint5">
-      <command_interface name="position" />
-      <state_interface name="position" />
-      <state_interface name="velocity" />
-      <state_interface name="effort" />
-    </joint>
-    <joint name="${left_prefix}joint6">
-      <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[left_prefix + 'joint1']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
 
-    <!-- Right arm joints -->
+    <joint name="${left_prefix}joint2">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[left_prefix + 'joint2']}</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+
+    <joint name="${left_prefix}joint3">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[left_prefix + 'joint3']}</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+
+    <joint name="${left_prefix}joint4">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[left_prefix + 'joint4']}</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+
+    <joint name="${left_prefix}joint5">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[left_prefix + 'joint5']}</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+
+    <joint name="${left_prefix}joint6">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[left_prefix + 'joint6']}</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+
+    <!-- RIGHT ARM JOINTS -->
     <joint name="${right_prefix}joint1">
       <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[right_prefix + 'joint1']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
+
     <joint name="${right_prefix}joint2">
       <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[right_prefix + 'joint2']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
+
     <joint name="${right_prefix}joint3">
       <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[right_prefix + 'joint3']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
+
     <joint name="${right_prefix}joint4">
       <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[right_prefix + 'joint4']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
+
     <joint name="${right_prefix}joint5">
       <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[right_prefix + 'joint5']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
+
     <joint name="${right_prefix}joint6">
       <command_interface name="position" />
-      <state_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">${initial_positions[right_prefix + 'joint6']}</param>
+      </state_interface>
       <state_interface name="velocity" />
       <state_interface name="effort" />
     </joint>
   </ros2_control>
-
   <gazebo>
-    <plugin filename="/opt/ros/humble/lib/libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+    <plugin filename="/opt/ros/humble/lib/libign_ros2_control-system.so"
+      name="ign_ros2_control::IgnitionROS2ControlPlugin">
       <parameters>$(find fairino_description)/config/ros2_controllers.yaml</parameters>
     </plugin>
   </gazebo>

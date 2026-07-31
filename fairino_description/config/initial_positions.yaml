@@ -1,15 +1,15 @@
-joint_state_publisher_gui:
-  ros__parameters:
-    zeros:
-      left_joint1: -1.57
-      left_joint2: -1.57
-      left_joint3:  1.57
-      left_joint4:  0.0
-      left_joint5:  3.14
-      left_joint6:  0.0
-      right_joint1:  1.57
-      right_joint2: -1.57
-      right_joint3: -1.57
-      right_joint4:  3.14
-      right_joint5:  3.14
-      right_joint6:  0.0
+# Shared initial joint positions for hardware and simulation.
+# These values match the SRDF dual-arms "home" group state.
+initial_positions:
+  left_joint1: -1.582234891889821
+  left_joint2: -1.582234891889821
+  left_joint3: -1.582234891889821
+  left_joint4: 0.0
+  left_joint5: 1.582234891889821
+  left_joint6: 0.0
+  right_joint1: 1.582234891889821
+  right_joint2: -1.582234891889821
+  right_joint3: 1.582234891889821
+  right_joint4: -3.141592
+  right_joint5: 4.71238898038
+  right_joint6: 0.628319

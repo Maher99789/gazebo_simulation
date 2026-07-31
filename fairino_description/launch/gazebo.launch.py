@@ -22,7 +22,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(ros_gz_sim_pkg, 'launch', 'gz_sim.launch.py')
         ),
-        launch_arguments={'gz_args': '-r empty.sdf'}.items(), # -r starts simulation immediately
+        launch_arguments={'gz_args': '-r home_world.sdf'}.items(), # -r starts simulation immediately
     )
 
     # 2. Robot State Publisher

@@ -30,7 +30,6 @@ def generate_launch_description():
             output='screen'
         ),
 
-        # GUI باش تبعث أوامر للـ controllers
         Node(
             package='rqt_joint_trajectory_controller',
             executable='rqt_joint_trajectory_controller',

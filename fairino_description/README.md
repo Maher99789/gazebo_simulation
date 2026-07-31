@@ -2,29 +2,45 @@
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y build - essential cmake git wget curl gnupg lsb - release
+sudo apt install -y build -essential cmake git wget curl gnupg lsb -release
 sudo apt install -y gazebo
 sudo apt install -y \
-  ros - humble - ros - gz \
-  ros - humble - ros - gz - sim \
-  ros - humble - ros - gz - bridge \
-  ros - humble - ros - gz - image \
-  ros - humble - ros - gz - interfaces \
-  ros - humble - gz - ros2 - control
+  ros-humble-ros-gz\
+  ros-humble-ros-gz-sim\
+  ros-humble-ros-gz-bridge\
+  ros-humble-ros-gz-image\
+  ros-humble-ros-gz-interfaces\
+  ros-humble-ros-gz-control\
+  ros-humble-ign-ros2-control
 ```
 
 # Check Gazebo Version and the pkg
 
 ```bash
-ign gazebo -- version
+ign gazebo --version
 ```
 This prints the installed Fortress version.
 ```bash
 dpkg -l | grep ros-humble-ros-gz
 
 ```
-
 The shell log confirms that all required ROS 2 Gazebo integration packages (ros-humble-ros-gz, ros-humble-ros-gz-sim, ros-humble-ros-gz-bridge, ros-humble-ros-gz-image, ros-humble-ros-gz-interfaces, and ros-humble-ros-gz-sim-demos) are installed successfully.
+
+🔧 Installation Steps realsense2
+
+```bash
+sudo apt update 
+sudo apt upgrade
+sudo apt install ros-humble-realsense2-camera ros-humble-realsense2-description
+```
+
+realsense2_camera → ROS2 driver node that streams topics like /camera/color/image_raw, /camera/depth/image_rect_raw, /camera/depth/color/points.
+
+realsense2_description → URDF/Xacro models for D415, D435, D455 cameras, used in RViz and Gazebo.
+
+```bash
+ros2 pkg list | grep realsense2
+```
 
 ```bash
 dpkg -l | grep ros-humble-ros-gz
@@ -42,53 +58,23 @@ ign gazebo -r -v 4 sensors . sdf
 ```
 # Gazebo Simulation Workflow
 ```mermaid
-classDiagram
-    class Gazebo {
-        +load_world()
-        +spawn_robot(URDF)
-        +physics_engine()
-    }
+sequenceDiagram
+    participant Gazebo
+    participant SpawnEntity
+    participant URDF
+    participant RobotStatePublisher
+    participant gz_ros2_control
+    participant ControllerManager
+    participant JointStateBroadcaster
 
-    class URDF {
-        +robot_description
-        +plugins[gz_ros2_control]
-        +joints_and_links
-    }
-
-    class gz_ros2_control {
-        +start_controller_manager()
-        +expose_joint_interfaces()
-        +read_YAML_config()
-    }
-
-    class ControllerManager {
-        +load_controllers()
-        +configure_controllers()
-        +activate_controllers()
-        +publish_joint_states()
-    }
-
-    class Controllers {
-        <<examples>>
-        JointStateBroadcaster
-        PositionController
-        TrajectoryController
-        DiffDriveController
-    }
-
-    class ROS2Topics {
-        <<topics>>
-        /cmd_vel
-        /joint_states
-        /arm_controller/commands
-    }
-
-    Gazebo --> URDF : loads
-    URDF --> gz_ros2_control : plugin
-    gz_ros2_control --> ControllerManager : starts
-    ControllerManager --> Controllers : manages
-    Controllers --> ROS2Topics : expose topics
-    ROS2Topics --> Gazebo : feedback loop
+    URDF->>RobotStatePublisher: Load URDF into robot_description
+    RobotStatePublisher->>SpawnEntity: Provide robot_description parameter
+    SpawnEntity->>Gazebo: Request entity creation from URDF
+    Gazebo->>gz_ros2_control: Initialize plugin with robot_description
+    gz_ros2_control->>ControllerManager: Start controller manager
+    ControllerManager->>JointStateBroadcaster: Load and activate broadcaster
+    JointStateBroadcaster->>Gazebo: Publish joint_states from simulation
+    Gazebo->>ControllerManager: Feedback loop with joint interfaces
 ```
 📑 Detailed Step-by-Step Breakdown
 
@@ -218,12 +204,9 @@ ros2 run controller_manager spawner left_arm_controller
 ros2 run controller_manager spawner right_arm_controller
 ```
 Note: Use this command to directly launch a complete SDF World in Ignition/Gazebo Sim.(Unlike model spawning, this opens the full simulation environment directly from the SDF world file.)
-Parameters:
--r: Starts the simulation immediately (Run mode, auto-play without pressing Play button)
-// $HOME/...   : Absolute path to your custom world.sdf file
 
 ```bash
-ros2 run ros_gz_sim create -file /path/to/your_model.sdf -name my_model -x 0.0 -y 0.0 -z 0.0
+ign gazebo home_world.sdf
 ```
 Terminal4:
 ```bash

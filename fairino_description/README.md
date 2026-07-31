@@ -114,6 +114,15 @@ sequenceDiagram
 ```
 Adding these export commands to my ~/.bashrc file, I permanently set environment variables that tell the shell where to find ROS 2 libraries, Gazebo plugins, and my robot’s meshes, so every new terminal session automatically has the correct paths configured.
 
+# Create this directory on your local machine and then clone the repository
+
+```bash
+mkdir -p sim_ws/src
+cd sim_ws/src
+git clone https://github.com/Maher99789/gazebo_simulation.git
+```
+
+
 ```bash
 gedit ~/.bashrc
 ```
